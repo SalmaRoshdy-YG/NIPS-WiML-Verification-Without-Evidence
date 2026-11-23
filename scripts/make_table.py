@@ -14,7 +14,7 @@ Rules (identical for every number):
     solutions. It reads nothing else.
 """
 import argparse, collections, glob, json, os, re, sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1_pipeline", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pipeline", "src"))
 import march_verbatim as MV
 
 TIER = {("claude_3.7_sonnet","easy"):162,("claude_3.7_sonnet","medium"):92,("claude_3.7_sonnet","hard"):71,

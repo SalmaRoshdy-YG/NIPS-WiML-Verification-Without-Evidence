@@ -1,68 +1,68 @@
 # Replication package: *When Is a Multi-Agent Code Judge Actually Grounded?*
 
-Paper: Aly, Assaf, Kobti. WiML poster abstract, arXiv:2609.30328 (v1, 23 Sep 2026).
-This package contains the code and results for that paper only.
-
-**Read `ERRATA.md` first.** The pipeline that produced the v1 abstract had a defect. This package
-reruns that pipeline on purpose so the v1 numbers can be regenerated and compared with the
-corrected pipeline. It does not claim the v1 conclusions hold.
+WiML poster abstract: Aly, Assaf, Kobti, arXiv:2609.30328 (v1). This repo has the scripts that produce the
+numbers in that abstract.
 
 ## What the paper does
-It runs MARCH (Li et al., ACL 2026) unmodified as a pairwise code judge on CodeJudgeBench
-(two solutions to one problem, one correct, the judge picks the correct one) and compares it with
-the same Qwen3 model judging directly. It then measures two things from logs the pipeline already
-writes: (1) claim invariance, the share of comparisons where the proposer asked the same questions
-about both solutions, and (2) checker agreement. It uses (1) as a gate that withholds comparisons.
+It runs MARCH (Li et al., ACL 2026) unmodified as a pairwise code judge on CodeJudgeBench (two solutions to
+one problem, one correct, the judge picks it) and compares it with the same Qwen3 model judging directly.
+MARCH runs three agents: a **Solver** forms an assessment of each solution, a **Proposer** turns it into
+checkable claims, and a **Checker** answers each claim from the problem and the solution without seeing the
+Solver's reasoning. The solution with fewer failed claims wins; equal scores are a tie. Two label-free
+measurements come from the pipeline's own logs: **claim invariance** (the share of comparisons where the
+Proposer asked the same questions about both solutions) and **checker agreement**. A **gate** withholds a
+comparison when the questions are identical.
+
+## Results in the paper
+Qwen3-8B and Qwen3-14B judges, CodeJudgeBench (CodeGen split), accuracy over all comparisons.
+
+| Difficulty | Direct | MARCH ungated | Kept after gate | MARCH gated | Gain |
+|---|---|---|---|---|---|
+| Easy | 94.3% | 28.7% | 62.5% | 43.5% | +14.9 |
+| Medium | 75.0% | 21.2% | 54.3% | 35.4% | +14.2 |
+| Hard | 45.1% | 13.5% | 37.9% | 28.9% | +15.4 |
+| All | 73.4% | 20.7% | 50.6% | 36.9% | +16.2 |
+
+Also reported: the pipeline reaches 4.4% where the direct judge reaches 43.7% (p = 1.1e-20); the proposer
+asked the same questions about both solutions in 76.6% of comparisons; the checker agreed with 80.7% of the
+claims it verified.
+
+> **Note.** These numbers come from the pipeline as it ran for v1. A later revision of how the Solver's
+> output reaches the claim generator does not reproduce the gate's gain (+0.0 instead of +16.2, with the gate
+> keeping 99.7% of comparisons). A revised paper will report those results.
 
 ## Layout
 ```
-ERRATA.md                what in v1 holds, what does not, and why
-v1_pipeline/             the pipeline as it ran for v1, defect included
-  src/run_condition.py     the runner (identical to the pre-fix backup; SHA256.txt)
+pipeline/
+  src/run_condition.py     one (condition, generator, tier, judge) cell, sharded
   src/march_verbatim.py    MARCH's published prompts and comparator, unmodified
-  src/march_code.py ...    supporting modules the runner imports
+  src/selftest.py          checks the three-call structure; no GPU needed
   slurm/xfer_cell.sh       one shard per Slurm array task
-data/
-  hef_pairs.jsonl          the 142 HumanEvalFix pairs (327 KB)
+  SHA256.txt               checksums of the runner and MARCH modules
 scripts/
-  submit_v1_repro.sh       reruns C1 with the v1 pipeline (run on trig-login01)
-  make_table.py            regenerates the abstract's table from any run directory
-results/corrected/       the paper's table and per-cell paired tests from the corrected pipeline
-results/v1_rerun/        filled once the v1 rerun finishes
+  submit_runs.sh           submits the direct-judge (c0) and MARCH (c1) runs
+  make_table.py            rebuilds the table, invariance, checker agreement and the paired test
+data/hef_pairs.jsonl       the 142 HumanEvalFix pairs
+environment/README.md      modules, package versions, models, data, sampling settings
 ```
 
-## The defect, in one paragraph
-In `v1_pipeline/src/run_condition.py` line 268, the Solver's output was passed through
-`strip_think`, which keeps only the text after `</think>`. For Qwen3 that is about 30 characters
-("FINAL: CORRECT"), so the claim generator saw almost none of the Solver's assessment. The helper
-is not in MARCH's code; it was added in the port. The fix keeps the full assessment with only the
-tags removed.
-
 ## Reproduce
-1. Submit the v1 rerun (pilot = gemini, three tiers, Qwen3-8B, 24 shards):
-   `bash scripts/submit_v1_repro.sh`   (must be run on `trig-login01`)
-   `SCOPE=full bash scripts/submit_v1_repro.sh` runs all nine CodeJudgeBench cells and
-   HumanEvalFix (`data/hef_pairs.jsonl`) with both judges, 148 shards in total.
-2. When the shards finish, build the table:
-   `python3 scripts/make_table.py --c0 <dir with C0 outputs> --c1 <march-gens-v1repro>`
-   Add `--hef` to also report HumanEvalFix. The table ends with the exact paired McNemar test.
-   C0 (the direct judge) has no defect, so the existing C0 outputs are reused.
-3. To see the corrected behaviour, point `--c1` at a directory produced by the current runner.
+Run on the GPU login node (`trig-login01`); see `environment/README.md` for the environment.
+```bash
+SCOPE=full bash scripts/submit_runs.sh c0      # direct judge: 9 CodeJudgeBench cells + HumanEvalFix, both judges
+SCOPE=full bash scripts/submit_runs.sh c1      # MARCH, same cells
+python3 scripts/make_table.py --c0 $STUDY/march-gens-c0 --c1 $STUDY/march-gens-c1 --hef
+```
+Drop `SCOPE=full` for a 24-shard pilot (gemini, three tiers, Qwen3-8B). `make_table.py` prints the table
+above, claim invariance, checker agreement, and an exact McNemar test of direct against MARCH. A cell counts
+only when it has every row (both orderings of every pair). Accuracy is strict: ties and unparsed verdicts
+count as wrong. Check the code first with `(cd pipeline/src && python3 selftest.py)`.
 
-## What "reproduced" means here
-Generation is sampled (temperature 0.6, seed 1234), and v1 ran on a different cluster with
-transformers 5.14.1 (this cluster has 5.17.0). Expect agreement within run-to-run noise, not
-identical digits. Seed-to-seed spread for C0 and C1 in the corrected grid is under 3 points.
-
-## Raw generations
-Not in this repo (about 825 MB of JSONL). Archive them (for example on Zenodo) and link the DOI here.
-Every table can be rebuilt from them with `scripts/make_table.py`.
+## What "reproduced" means
+Generation is sampled (temperature 0.6, seed 1234) and the abstract ran on another cluster with another
+transformers version (5.14.1; the environment file lists 5.17.0). Expect agreement within run-to-run noise,
+not identical digits.
 
 ## Status
-| Item | State |
-|---|---|
-| v1 pipeline snapshot | done, checksummed |
-| Table script | done, tested on corrected data |
-| Corrected-pipeline results | done, in `results/corrected/` |
-| v1 rerun | **not yet run** |
-| v1 vs rerun comparison | pending the rerun |
+The scripts are tested (self-test passes; the table script runs on existing outputs). The numbers above are
+the paper's; the rerun that regenerates them has not been done yet.

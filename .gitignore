@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 march-gens*/
 !data/hef_pairs.jsonl
+!sample_outputs/**/*.jsonl
