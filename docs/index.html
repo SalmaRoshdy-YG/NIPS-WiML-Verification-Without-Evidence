@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>When Is a Multi-Agent Code Judge Actually Grounded?</title>
+<meta name="description" content="Two label-free measurements, and a judge that declines to guess. WiML Workshop at NeurIPS.">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<div class="welcome" id="welcome" hidden><div class="wrap">Thanks, nice to meet you! Here is the paper.</div></div>
+<header class="hero"><div class="wrap">
+  <p class="tag">WiML Workshop · NeurIPS</p>
+  <h1>When Is a Multi-Agent Code Judge Actually Grounded?</h1>
+  <p class="sub">Two label-free measurements, and a judge that declines to guess</p>
+  <p class="by">Salma Roshdy Aly · Ziad Kobti</p>
+  <p class="aff">School of Computer Science, University of Windsor, Canada</p>
+</div></header>
+
+<nav class="wrap links" aria-label="Links">
+  <h2>The paper</h2>
+  <div class="chips">
+    <a class="chip paper" href="https://arxiv.org/abs/2609.30328">📄 arXiv paper</a>
+    <a class="chip paper" href="https://github.com/SalmaRoshdy-YG/NIPS-WiML-Verification-Without-Evidence">💻 Paper code</a>
+    <a class="chip paper" href="https://doi.org/10.5281/zenodo.20618538">📦 Replication package</a>
+  </div>
+  <h2>Me</h2>
+  <div class="chips">
+    <a class="chip" href="https://www.linkedin.com/in/salma-aly-92bb09174">LinkedIn</a>
+    <a class="chip" href="https://scholar.google.ca/citations?user=eEISqbYAAAAJ&amp;hl=en">Google Scholar</a>
+    <a class="chip" href="mailto:ali9o@uwindsor.ca">Email</a>
+    <a class="chip" href="https://github.com/SalmaRoshdy-YG">GitHub</a>
+    <a class="chip" href="https://salmaroshdy-yg.github.io/">Portfolio</a>
+  </div>
+</nav>
+
+<main class="wrap">
+<section class="card" id="idea">
+  <h2 class="s">The idea</h2>
+  <p>Teams now let one language model <em>write</em> code and a second one <em>decide whether it can merge</em>. When the second model has no basis for a decision, it does not say so. It returns a <em>confident verdict</em> that looks the same as one it had good reason for.</p>
+  <p>One promising fix is to stop asking a single model for a verdict. Break the judgment into small checkable claims and have a separate agent verify each claim, kept away from the first model's reasoning. We ask what this needs in order to work, and whether we can check that before relying on it.</p>
+  <h3>Two conditions for grounding</h3>
+  <div class="two">
+    <div class="cond"><b>Independent</b>The evidence must not come from the answer under review, or the checker just re-reads it and agrees.</div>
+    <div class="cond"><b>Differs between candidates</b>Evidence identical for both solutions is reliable, yet tells you nothing. With retrieved documents this holds automatically. In code judging it stops holding.</div>
+  </div>
+</section>
+
+<section class="card" id="method">
+  <h2 class="s">The method</h2>
+  <p>We ran a published framework, MARCH, unmodified as a pairwise code judge on CodeJudgeBench: two solutions to the same problem, one correct and one subtly buggy, and the judge picks the correct one.</p>
+  <ol class="pipe">
+    <li><b>Solver</b>Reads the problem and a solution and forms an opinion on whether it is correct.</li>
+    <li><b>Proposer</b>Turns that opinion into a list of individually checkable claims.</li>
+    <li class="gate"><b>Our gate</b>If the proposer asked the same questions about both solutions, withhold the comparison. Needs no labels and no extra model calls.</li>
+    <li><b>Checker</b>Answers each claim from the problem and solution, without seeing the solver's reasoning.</li>
+    <li><b>Verdict</b>The solution that survives more of its claims wins. Equal scores are a tie.</li>
+  </ol>
+  <p class="small">Data: CodeJudgeBench (generators Gemini-2.5-Pro, Claude-3.7-Sonnet and Qwen3-235B, three difficulty levels) and HumanEvalFix. Judges: Qwen3-8B and Qwen3-14B. 54 experimental cells, about 2,000 comparisons.</p>
+</section>
+
+<section class="card" id="results">
+  <h2 class="s">The results</h2>
+  <p>The pipeline never errors, yet it has nothing to go on. Two measurements, both computed from logs it already writes and with no ground-truth labels, explain why.</p>
+  <div class="stats">
+    <div class="stat"><div class="n">78–95%</div><div class="l">of comparisons declared a <b>tie</b></div></div>
+    <div class="stat"><div class="n">76.6%</div><div class="l">of comparisons: the proposer asked the <b>same questions</b> about both solutions</div></div>
+    <div class="stat"><div class="n">80.7%</div><div class="l">of claims the checker <b>agreed with</b></div></div>
+  </div>
+  <p>Accuracy reaches 4.4% where the same model asked directly reaches 43.7% (p = 1.1×10<sup>−20</sup>). Easier problems do not help the pipeline, and neither does a 1.75× larger judge.</p>
+  <h3>The repair: decline to guess</h3>
+  <p>Withholding comparisons where the questions are identical raises accuracy from <em>20.7% to 36.9%</em> while still answering about half (50.6%) of them. The gain holds in every generator and difficulty level, under both judges. It does not make the pipeline competitive with the single model it is built from, which answers every comparison and is right on 73.4% of them.</p>
+  <div class="legend"><span style="--c:var(--slate)">Direct judge</span><span style="--c:var(--coral)">MARCH ungated</span><span style="--c:var(--teal)">MARCH gated</span></div>
+  <div class="grp"><h4>Easy</h4><div class="row" role="img" aria-label="Direct 94.3%"><div class="track"><div class="bar" style="width:94.3%;--c:var(--slate)"></div></div><div class="val">94.3</div></div><div class="row" role="img" aria-label="MARCH ungated 28.7%"><div class="track"><div class="bar" style="width:28.7%;--c:var(--coral)"></div></div><div class="val">28.7</div></div><div class="row" role="img" aria-label="MARCH gated 43.5%"><div class="track"><div class="bar" style="width:43.5%;--c:var(--teal)"></div></div><div class="val">43.5</div></div></div><div class="grp"><h4>Medium</h4><div class="row" role="img" aria-label="Direct 75.0%"><div class="track"><div class="bar" style="width:75.0%;--c:var(--slate)"></div></div><div class="val">75.0</div></div><div class="row" role="img" aria-label="MARCH ungated 21.2%"><div class="track"><div class="bar" style="width:21.2%;--c:var(--coral)"></div></div><div class="val">21.2</div></div><div class="row" role="img" aria-label="MARCH gated 35.4%"><div class="track"><div class="bar" style="width:35.4%;--c:var(--teal)"></div></div><div class="val">35.4</div></div></div><div class="grp"><h4>Hard</h4><div class="row" role="img" aria-label="Direct 45.1%"><div class="track"><div class="bar" style="width:45.1%;--c:var(--slate)"></div></div><div class="val">45.1</div></div><div class="row" role="img" aria-label="MARCH ungated 13.5%"><div class="track"><div class="bar" style="width:13.5%;--c:var(--coral)"></div></div><div class="val">13.5</div></div><div class="row" role="img" aria-label="MARCH gated 28.9%"><div class="track"><div class="bar" style="width:28.9%;--c:var(--teal)"></div></div><div class="val">28.9</div></div></div><div class="grp"><h4>All difficulties</h4><div class="row" role="img" aria-label="Direct 73.4%"><div class="track"><div class="bar" style="width:73.4%;--c:var(--slate)"></div></div><div class="val">73.4</div></div><div class="row" role="img" aria-label="MARCH ungated 20.7%"><div class="track"><div class="bar" style="width:20.7%;--c:var(--coral)"></div></div><div class="val">20.7</div></div><div class="row" role="img" aria-label="MARCH gated 36.9%"><div class="track"><div class="bar" style="width:36.9%;--c:var(--teal)"></div></div><div class="val">36.9</div></div></div>
+  <p class="small">Accuracy (%) by difficulty. Direct is the same model asked for a verdict without the pipeline.</p>
+  <div class="scroll"><table>
+    <tr><th>Difficulty</th><th>Direct</th><th>Ungated</th><th>Kept</th><th>Gated</th></tr>
+    <tr><td>Easy</td><td>94.3</td><td>28.7</td><td>62.5%</td><td>43.5</td></tr><tr><td>Medium</td><td>75.0</td><td>21.2</td><td>54.3%</td><td>35.4</td></tr><tr><td>Hard</td><td>45.1</td><td>13.5</td><td>37.9%</td><td>28.9</td></tr><tr><td>All</td><td>73.4</td><td>20.7</td><td>50.6%</td><td>36.9</td></tr>
+  </table></div>
+  <p class="note"><b>Update.</b> These numbers come from the pipeline as it ran for v1. A later revision of how the solver's output reaches the claim generator does not reproduce the gate's gain (+0.0 instead of +16.2, with the gate keeping 99.7% of comparisons). A revised paper will report those results.</p>
+</section>
+
+<section class="card" id="takeaways">
+  <h2 class="s">Takeaways</h2>
+  <ul>
+    <li>A verifier needs evidence that is independent and that differs between the candidates.</li>
+    <li>Both properties can be measured from logs the pipeline already writes, with no labels.</li>
+    <li>Gating is a partial repair, not a solution: the direct judge still wins.</li>
+    <li>The contribution is knowing when a judge has no basis for its answer, and declining to guess.</li>
+  </ul>
+</section>
+</main>
+<footer class="wrap">Salma Roshdy Aly and Ziad Kobti, University of Windsor. WiML Workshop at NeurIPS.</footer>
+<script src="app.js"></script>
+</body>
+</html>

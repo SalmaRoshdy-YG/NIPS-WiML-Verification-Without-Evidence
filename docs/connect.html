@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Let's connect</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body class="connect">
+<header class="hero"><div class="wrap">
+  <p class="tag">WiML Workshop · NeurIPS</p>
+  <h1>Let's connect</h1>
+  <p class="sub">Thanks for stopping by the poster.</p>
+</div></header>
+<main><div class="wrap">
+  <div class="card">
+    <p style="margin:0">Leave your email and I'll get in touch after the conference. You'll go straight to the paper page next: the idea, the method and the results.</p>
+    <form id="f" novalidate>
+      <div><label for="name">Name <span class="small">(optional)</span></label>
+        <input id="name" name="name" type="text" autocomplete="name" maxlength="100"></div>
+      <div><label for="email">Email</label>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="err" id="err" role="alert"></p>
+      <button class="go" id="go" type="submit">Connect and view the paper</button>
+      <p class="fine">Your email is used only to follow up about this work. It is stored privately and not shared.</p>
+    </form>
+    <a class="skip" href="index.html">Skip and go to the paper</a>
+  </div>
+</div></main>
+<script src="connect.js"></script>
+</body>
+</html>
