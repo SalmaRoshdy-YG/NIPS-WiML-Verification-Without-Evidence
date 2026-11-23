@@ -1,6 +1,6 @@
 # Replication package: *When Is a Multi-Agent Code Judge Actually Grounded?*
 
-WiML poster abstract: Aly, Assaf, Kobti, arXiv:2609.30328 (v1). This repo has the scripts that produce the
+WiML poster abstract: Aly, Assaf, Kobti, arXiv:2609.30328. This repo has the scripts that produce the
 numbers in that abstract.
 
 ## What the paper does
