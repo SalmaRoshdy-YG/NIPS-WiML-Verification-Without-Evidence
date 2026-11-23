@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.out
+*.jsonl
+.venv/
+march-gens*/
+!data/hef_pairs.jsonl

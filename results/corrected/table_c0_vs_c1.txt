@@ -1,0 +1,7 @@
+cells used (12): claude_3.7_sonnet/easy/8b; claude_3.7_sonnet/easy/qwen3-14b; claude_3.7_sonnet/hard/8b; claude_3.7_sonnet/hard/qwen3-14b; gemini_2.5_pro/easy/8b; gemini_2.5_pro/easy/qwen3-14b; gemini_2.5_pro/hard/8b; gemini_2.5_pro/hard/qwen3-14b; gemini_2.5_pro/medium/8b; gemini_2.5_pro/medium/qwen3-14b; qwen3_235b/easy/8b; qwen3_235b/medium/qwen3-14b
+
+          direct  ungated    kept   gated    gain    inv.  chk agr   rows
+easy        95.3     18.9   99.6%    19.0    +0.1    0.4%    94.0%    996
+medium      78.6     17.3  100.0%    17.3    +0.0    0.0%    93.2%    346
+hard        47.1     15.5   99.8%    15.6    +0.0    0.2%    93.2%    824
+all         74.3     17.4   99.7%    17.4    +0.0    0.3%    93.6%   2166
